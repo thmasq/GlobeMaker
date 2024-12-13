@@ -42,3 +42,14 @@ whereas:
 would give you:
 
 ![globe 3 gores](https://jonnyhuckblog.files.wordpress.com/2016/06/globe2.png)
+
+### With docker:
+First build the image:
+```bash
+docker build -t globe-generator .
+```
+Then run the image with parameters:
+```bash
+docker run -v ./output:/output globe-generator \
+    -p 1024 -d 60 -g 2 -o /output/my_globe.png
+```
