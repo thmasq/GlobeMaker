@@ -7,6 +7,9 @@ import os
 import sys
 import getopt
 from PIL import Image
+import cartopy.io.shapereader as shpreader
+from cartopy.mpl.patch import geos_to_path
+from shapely.geometry import Polygon, box
 
 def getRhumb(startlong, startlat, endlong, endlat, nPoints):
     # calculate distance between points
@@ -23,29 +26,27 @@ def getRhumb(startlong, startlat, endlong, endlat, nPoints):
 def makeGore(central_meridian, gore_width, number, width, gore_stroke):
     # Create a custom sinusoidal projection centered on the gore's central meridian
     gore_proj = ccrs.Sinusoidal(central_longitude=central_meridian)
+    plate_proj = ccrs.PlateCarree()
     
-    # Set up the plot with a specific aspect ratio to prevent distortion
+    # Set up the figure
     plt.figure(figsize=(width/100, (width/2)/100), dpi=100)
     ax = plt.subplot(1, 1, 1, projection=gore_proj)
     
-    # Set the extent of the gore
-    # The vertical extent is from -90 to 90 degrees (full latitude range)
-    # The horizontal extent is the gore width
+    # Define the extent (full latitudinal range, rectangular box for now)
     halfWidth = gore_width / 2
-    ax.set_extent([central_meridian - halfWidth, central_meridian + halfWidth, -90, 90], crs=ccrs.PlateCarree())
+    ax.set_extent([central_meridian - halfWidth, central_meridian + halfWidth, -90, 90], crs=plate_proj)
     
-    # Add land and coastline features
+    # Add land and coastlines
     ax.add_feature(cfeature.LAND, facecolor='black', edgecolor='none')
     ax.add_feature(cfeature.COASTLINE, edgecolor='black', linewidth=gore_stroke/2)
     
-    # Add gridlines to show the sinusoidal projection's effect
-    # ax.gridlines(draw_labels=False, linewidth=0.5, color='black', alpha=0.5)
-    
-    # Remove unnecessary axes and whitespace
+    clipping_mask = box(central_meridian - halfWidth, -90, central_meridian + halfWidth, 90)
+
+    ax.add_geometries([clipping_mask], crs=plate_proj, facecolor='white', edgecolor='none', zorder=3)
+
+    # Remove axes and save
     plt.axis('off')
     plt.tight_layout(pad=0)
-    
-    # Save the figure
     plt.savefig(f"tmp/gore{number}.png", bbox_inches='tight', pad_inches=0, transparent=False, facecolor='white')
     plt.close()
 
