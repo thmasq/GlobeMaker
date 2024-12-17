@@ -7,13 +7,16 @@
 You can read all about the process at my [blog](https://jonnyhuckblog.wordpress.com/2016/06/29/globemaking-for-beginners/).
 
 ## Dependencies:
+```c
+/* To be updated to reflect changes
 * [Python 2.7](https://www.python.org/)
 * [OGR](http://gdal.org/python/)
 * [PyProj](https://github.com/jswhit/pyproj)
 * [Mapnik](https://github.com/mapnik/python-mapnik)
 * [PIL](http://www.pythonware.com/products/pil/)
 * [Natural Earth Landmass Data](http://www.naturalearthdata.com/downloads/110m-physical-vectors/)
-
+*/
+```
 ## Usage:
 
 ### Parameters:
