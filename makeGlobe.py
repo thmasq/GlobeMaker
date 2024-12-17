@@ -10,6 +10,8 @@ from PIL import Image
 import cartopy.io.shapereader as shpreader
 from cartopy.mpl.patch import geos_to_path
 from shapely.geometry import Polygon, box
+from matplotlib.path import Path
+
 
 def getRhumb(startlong, startlat, endlong, endlat, nPoints):
     # calculate distance between points
@@ -32,17 +34,27 @@ def makeGore(central_meridian, gore_width, number, width, gore_stroke):
     plt.figure(figsize=(width/100, (width/2)/100), dpi=100)
     ax = plt.subplot(1, 1, 1, projection=gore_proj)
     
-    # Define the extent (full latitudinal range, rectangular box for now)
+    # Define the extent (full latitudinal range)
     halfWidth = gore_width / 2
     ax.set_extent([central_meridian - halfWidth, central_meridian + halfWidth, -90, 90], crs=plate_proj)
     
-    # Add land and coastlines
+    # Create a lens-shaped clipping polygon in PlateCarree projection
+    lens_vertices = [
+        (central_meridian - halfWidth, -90),
+        (central_meridian - halfWidth, 90),
+        (central_meridian + halfWidth, 90),
+        (central_meridian + halfWidth, -90)
+    ]
+    
+    # Convert vertices to a matplotlib Path
+    lens_path = Path(lens_vertices, closed=False)
+    
+    # Clip using set_boundary
+    ax.set_boundary(lens_path, transform=plate_proj)
+    
+    # Add land and coastlines 
     ax.add_feature(cfeature.LAND, facecolor='black', edgecolor='none')
     ax.add_feature(cfeature.COASTLINE, edgecolor='black', linewidth=gore_stroke/2)
-    
-    clipping_mask = box(central_meridian - halfWidth, -90, central_meridian + halfWidth, 90)
-
-    ax.add_geometries([clipping_mask], crs=plate_proj, facecolor='white', edgecolor='none', zorder=3)
 
     # Remove axes and save
     plt.axis('off')
@@ -94,13 +106,8 @@ def main(argv):
     # how many gores?
     I = 360 // GORE_WIDTH_DEG
 
-    # make a test gore to see how big it is
-    makeGore(0, GORE_WIDTH_DEG, 666, GORE_WIDTH_PX, 0)
-    im666 = Image.open("tmp/gore666.png")
-    w, h = im666.size
-
-    # make gores and join them together into a single image
-    im = Image.new("RGB", (GORE_WIDTH_PX * I, h), "white")
+    # make gores and crop them precisely before joining
+    gore_images = []
     for i in range(0, I):
         cm = -180 + (GORE_WIDTH_DEG/2) + (GORE_WIDTH_DEG * i)
         # slight adjustment to prevent wrapping
@@ -108,8 +115,18 @@ def main(argv):
             cm -= 0.01
         print(f"Creating gore {i} with central meridian {cm}")
         makeGore(cm, GORE_WIDTH_DEG, i, GORE_WIDTH_PX, GORE_OUTLINE_WIDTH)
+        
+        # Open the gore image and crop it precisely
         im1 = Image.open(f"tmp/gore{i}.png")
-        im.paste(im1, (GORE_WIDTH_PX * i, 0))
+        gore_width = im1.width
+        gore_height = im1.height
+        # Crop to remove any white space, leaving just the gore
+        gore_images.append(im1)
+
+    # create a new image with exact total width
+    im = Image.new("RGB", (gore_width * I, gore_height), "white")
+    for i, gore_img in enumerate(gore_images):
+        im.paste(gore_img, (gore_width * i, 0))
 
     # clean up all tmp files
     files = os.listdir("tmp")
