@@ -50,6 +50,6 @@ docker build -t globe-generator .
 ```
 Then run the image with parameters:
 ```bash
-docker run -v ./output:/output globe-generator \
+docker run -v ./output:/output globemaker \
     -p 1024 -d 60 -g 2 -o /output/my_globe.png
 ```
