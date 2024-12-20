@@ -49,7 +49,7 @@ would give you:
 ### With docker:
 First build the image:
 ```bash
-docker build -t globe-generator .
+docker build -t globemaker .
 ```
 Then run the image with parameters:
 ```bash
