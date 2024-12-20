@@ -47,7 +47,11 @@ would give you:
 ![globe 3 gores](https://jonnyhuckblog.files.wordpress.com/2016/06/globe2.png)
 
 ### With docker:
-First build the image:
+Either pull the image:
+```bash
+docker pull ghcr.io/thmasq/globemaker:latest
+```
+Or build it yourself:
 ```bash
 docker build -t globemaker .
 ```
